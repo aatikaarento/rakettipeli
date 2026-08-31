@@ -1,7 +1,11 @@
 # PELIN SÄÄNNÖT JA KUVAUS:
 # Tavoite: Laukaise raketti tykillä ja saavuta kaikki 3 planeettaa (Mars, Saturnus, Neptunus) avaruudessa.
-# Aloitus: Paina mitä tahansa näppäintä introssa päästäksesi peliin.
-# Ohjaimet: UP/SPACE = laukaise raketti / työntövoima ilmassa, LEFT/RIGHT = sivuttaisliike, R = aloita alusta / palaa Maahan, 1/2/3 = osta päivityksiä.
+# Aloitus: Paina mitä tahansa näppäintä tai ohjaimen nappia introssa päästäksesi peliin.
+# Ohjaimet:
+#   - UP / W / SPACE / D-PAD UP / A-nappi = laukaise raketti / työntövoima
+#   - LEFT/RIGHT / A/D / D-PAD LEFT/RIGHT = sivuttaisliike
+#   - R / Y-nappi = aloita alusta / palaa Maahan
+#   - 1/2/3 / B/X/Y-napit = osta päivityksiä
 # Planeetat:
 #   - Kuu (2 000m): Avaruuden raja
 #   - Mars (6 000m): +300 kolikkoa
@@ -263,6 +267,22 @@ class App:
                 if pyxel.btnp(key):
                     self.show_intro = False
                     return
+
+            gamepad_buttons = [
+                pyxel.GAMEPAD1_BUTTON_A,
+                pyxel.GAMEPAD1_BUTTON_B,
+                pyxel.GAMEPAD1_BUTTON_X,
+                pyxel.GAMEPAD1_BUTTON_Y,
+                pyxel.GAMEPAD1_BUTTON_DPAD_UP,
+                pyxel.GAMEPAD1_BUTTON_DPAD_DOWN,
+                pyxel.GAMEPAD1_BUTTON_DPAD_LEFT,
+                pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT,
+            ]
+            for btn in gamepad_buttons:
+                if pyxel.btnp(btn):
+                    self.show_intro = False
+                    return
+
             if (
                 pyxel.btnp(pyxel.KEY_SPACE)
                 or pyxel.btnp(pyxel.KEY_RETURN)
@@ -278,7 +298,7 @@ class App:
                 return
             return
 
-        if pyxel.btnp(pyxel.KEY_R):
+        if pyxel.btnp(pyxel.KEY_R) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_Y):
             self.high_score = max(self.high_score, self.game.high_score)
             self.game = RocketGame(
                 high_score=self.high_score,
@@ -294,15 +314,22 @@ class App:
         rocket = self.game.rocket
 
         if rocket.state in ["aiming", "stopped", "landed_neptune"]:
-            if pyxel.btnp(pyxel.KEY_1):
+            if pyxel.btnp(pyxel.KEY_1) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_B):
                 self.buy_upgrade("cannon")
-            elif pyxel.btnp(pyxel.KEY_2):
+            elif pyxel.btnp(pyxel.KEY_2) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_X):
                 self.buy_upgrade("engine")
-            elif pyxel.btnp(pyxel.KEY_3):
+            elif pyxel.btnp(pyxel.KEY_3) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_Y):
                 self.buy_upgrade("fuel")
 
         if rocket.state == "aiming":
-            if pyxel.btnp(pyxel.KEY_UP) or pyxel.btnp(pyxel.KEY_SPACE):
+            launch_pressed = (
+                pyxel.btnp(pyxel.KEY_UP)
+                or pyxel.btnp(pyxel.KEY_W)
+                or pyxel.btnp(pyxel.KEY_SPACE)
+                or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_DPAD_UP)
+                or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A)
+            )
+            if launch_pressed:
                 self.game.launch_rocket()
             else:
                 self.game.step()
@@ -310,9 +337,19 @@ class App:
 
         if rocket.state == "landing_neptune":
             speed = 1.5
-            if pyxel.btn(pyxel.KEY_LEFT):
+            move_left = (
+                pyxel.btn(pyxel.KEY_LEFT)
+                or pyxel.btn(pyxel.KEY_A)
+                or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT)
+            )
+            move_right = (
+                pyxel.btn(pyxel.KEY_RIGHT)
+                or pyxel.btn(pyxel.KEY_D)
+                or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT)
+            )
+            if move_left:
                 rocket.x = max(6.0, rocket.x - speed)
-            elif pyxel.btn(pyxel.KEY_RIGHT):
+            elif move_right:
                 rocket.x = min(154.0, rocket.x + speed)
 
             rocket.y += 0.6
@@ -325,9 +362,23 @@ class App:
         if rocket.state != "flying":
             return
 
-        thrust_up = pyxel.btn(pyxel.KEY_UP) or pyxel.btn(pyxel.KEY_SPACE)
-        thrust_left = pyxel.btn(pyxel.KEY_LEFT)
-        thrust_right = pyxel.btn(pyxel.KEY_RIGHT)
+        thrust_up = (
+            pyxel.btn(pyxel.KEY_UP)
+            or pyxel.btn(pyxel.KEY_W)
+            or pyxel.btn(pyxel.KEY_SPACE)
+            or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_UP)
+            or pyxel.btn(pyxel.GAMEPAD1_BUTTON_A)
+        )
+        thrust_left = (
+            pyxel.btn(pyxel.KEY_LEFT)
+            or pyxel.btn(pyxel.KEY_A)
+            or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT)
+        )
+        thrust_right = (
+            pyxel.btn(pyxel.KEY_RIGHT)
+            or pyxel.btn(pyxel.KEY_D)
+            or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT)
+        )
 
         self.game.step(
             thrust_up=thrust_up,
@@ -498,9 +549,9 @@ class App:
             else "MAX"
         )
 
-        pyxel.text(4, 26, f"[1]Cannon:{self.cannon_lvl}/5 ({c_cost})", 7)
-        pyxel.text(4, 34, f"[2]Engine:{self.engine_lvl}/5 ({e_cost})", 7)
-        pyxel.text(4, 42, f"[3]Fuel:  {self.fuel_lvl}/5 ({f_cost})", 7)
+        pyxel.text(4, 26, f"[1/B]Cannon:{self.cannon_lvl}/5 ({c_cost})", 7)
+        pyxel.text(4, 34, f"[2/X]Engine:{self.engine_lvl}/5 ({e_cost})", 7)
+        pyxel.text(4, 42, f"[3/Y]Fuel:  {self.fuel_lvl}/5 ({f_cost})", 7)
 
     def draw(self):
         if self.show_intro:
@@ -529,7 +580,7 @@ class App:
 
                 pyxel.text(50, 50, "NEPTUNE LANDED!", 10)
                 pyxel.text(48, 60, "GAME COMPLETED!", 10)
-                pyxel.text(34, 72, "Press R to return Earth", 7)
+                pyxel.text(34, 72, "Press R / Y to return Earth", 7)
 
                 self.draw_upgrades_menu()
             return
@@ -574,6 +625,13 @@ class App:
             pyxel.rect(60, ground_screen_y + 2, 40, 2, 11)
 
         if rocket.state == "flying":
+            thrust_up_active = (
+                pyxel.btn(pyxel.KEY_UP)
+                or pyxel.btn(pyxel.KEY_W)
+                or pyxel.btn(pyxel.KEY_SPACE)
+                or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_UP)
+                or pyxel.btn(pyxel.GAMEPAD1_BUTTON_A)
+            )
             if rocket.boost_timer > 0 and rocket.vy < 0:
                 pyxel.tri(
                     rocket.x - 3,
@@ -584,10 +642,7 @@ class App:
                     rocket.y + 13,
                     11,
                 )
-            elif (
-                (pyxel.btn(pyxel.KEY_UP) or pyxel.btn(pyxel.KEY_SPACE))
-                and rocket.fuel > 0
-            ):
+            elif thrust_up_active and rocket.fuel > 0:
                 pyxel.tri(
                     rocket.x - 2,
                     rocket.y + 4,
@@ -623,7 +678,7 @@ class App:
             self.draw_upgrades_menu()
 
             if rocket.state == "stopped":
-                pyxel.text(45, 62, "Press R to restart", 7)
+                pyxel.text(40, 62, "Press R / Y to restart", 7)
 
 
 if __name__ == "__main__":
