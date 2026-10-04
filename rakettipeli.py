@@ -669,7 +669,7 @@ class App:
             pyxel.text(4, 4, f"High Score: {self.high_score}", 11)
 
             pyxel.circ(6, 16, 2, 10)
-            pyxel.pset(6, 16, 9)
+            pyxel.pset(6, 16, 9) 
             pyxel.text(12, 14, str(self.total_coins), 10)
 
             unlocked_count = len(self.unlocked_planets)
